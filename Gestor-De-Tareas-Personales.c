@@ -23,9 +23,9 @@ typedef struct
     char titulo_tarea[100];
     int prioridad; // 1-prioridad alta, 2-prioridad media, 3 prioridad baja
     int estado_tarea; // 0-incompleta, 1-competa 
-}Tarea;
+}Tareas;
 
-Tarea Tareas[MAXIMO_TAREAS];
+Tareas tareas[MAXIMO_TAREAS];
 
 int contador_tareas = 0;
 
@@ -38,15 +38,34 @@ printf("=====================================\n");
     
     printf("Bienvenido al Gestor de Tareas Personales\n");
 
-    printf("Aqui podra:\n");
-    printf("1. Registrar tareas\n");
-    printf("2. Marcar tareas completadas(no activo)\n");
-    printf("3. Mostrar tareas activas y complementarias(no activo)\n");
-    printf("4. Guardar en archivo (no activo)\n");
-    printf("5. Contar tareas activas (no activo)\n");
-    printf("=====================================\n");
-    
+   
+
 agregartarea();
 
 return 0;
+}
+
+void agregartarea(){
+if (contador_tareas >= MAXIMO_TAREAS)
+{
+   printf("Lo siento, has alcanzado el maximo de tareas)\n");
+   return;
+}
+
+printf("Ingrese el titulo de la tarea: ");
+fgets(tareas[contador_tareas].titulo_tarea, 100, stdin); 
+
+printf("Ingrese la prioridad de la tarea (1-Alta, 2-Media, 3-Baja): ");
+scanf("%d", &tareas[contador_tareas].prioridad);
+
+tareas[contador_tareas].estado_tarea = 0;
+
+contador_tareas++;
+
+    printf("Tarea agregada correctamente.\n");
+
+
+
+
+
 }

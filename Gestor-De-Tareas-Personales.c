@@ -38,11 +38,13 @@ void guardar_tareas(const char *nombre_archivo);
 void cargar_tareas(const char *nombre_archivo);
 
 void agregartarea();
+void mostrar_tarea(void);
 void mostrar_menu(void); 
 
 int main(){
 
   char nombre_archivo[100];
+  char opcion_mostrar;// Opcion para decidir si se muestran las tareas1
   int opcion = 0;
 
     //Mostrar menu y permitir al usuario elegir o ingresar archivo
@@ -80,7 +82,25 @@ printf("=====================================\n");
     printf("===Tareas activas: %d\n", contadoractivas);
     printf("===Tareas completadas: %d\n\n", contadorcompletadas);
 
+
+// ----- OPCION PARA MOSTRAR TAREAS DESPUES DE LA BIENVENIDA -----
+
+printf("Desea ver sus tareas actuales? (s/n): ");
+
+scanf(" %c", &opcion_mostrar);
+
+limpiarBufferEntrada();
+
+if (opcion_mostrar == 's' || opcion_mostrar == 'S')
+{
+    mostrar_tarea
+    ();
+}
+
 agregartarea();
+
+
+
 
 guardar_tareas(nombre_archivo);
 
@@ -217,3 +237,50 @@ void cargar_tareas(const char *nombre_archivo)
     recalcular_contadores();
     printf("* Tareas cargadas desde '%s'.\n", archivo_final);
 }
+
+void mostrar_tarea(void){ // Muestra todas las tareas registradas en el sistema
+    int i;
+
+    printf("\n===Lista de Tareas===\n");
+
+    if (contador_tareas == 0){
+        printf("No hay tareas agregadas.\n");
+    }
+// Recorrer todas las tareas almacenadas
+    for (i=0; i<contador_tareas; i++){ 
+
+        printf("\nTarea #%d\n", i + 1);
+
+        printf("Titulo: %s\n", tareas[i].titulo_tarea);
+
+
+        printf("Prioridad: ");
+
+        if (tareas[i].prioridad == 1)
+
+            printf("Alta\n");
+
+        else if (tareas[i].prioridad == 2)
+
+            printf("Media\n");
+
+        else if (tareas[i].prioridad == 3)
+            printf("Baja\n");
+
+        printf("Estado: ");
+
+        if (tareas[i].estado_tarea == 0)
+
+            printf("Activa\n");
+        else
+            printf("Completada\n");
+    }
+
+    printf("\n===================================\n");
+
+
+
+
+    }
+
+

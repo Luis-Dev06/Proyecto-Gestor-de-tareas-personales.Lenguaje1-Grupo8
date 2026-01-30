@@ -30,9 +30,11 @@ Tareas tareas[MAXIMO_TAREAS];
 int contador_tareas = 0;
 int contadoractivas = 0;
 int contadorcompletadas = 0;
+int cambios_pendientes = 0; // 0 = no hay cambios, 1 = hay cambios
 
 void limpiarBufferEntrada(void);
 void recalcular_contadores(void);
+
 
 void guardar_tareas(const char *nombre_archivo);
 void cargar_tareas(const char *nombre_archivo);
@@ -100,9 +102,10 @@ if (opcion_mostrar == 's' || opcion_mostrar == 'S')
 agregartarea();
 
 
-
-
-guardar_tareas(nombre_archivo);
+if (cambios_pendientes)
+{
+    guardar_tareas(nombre_archivo);
+}
 
 return 0;
 }
@@ -138,6 +141,8 @@ tareas[contador_tareas].estado_tarea = 0; // por defecto incompleta
 contador_tareas++;
 
 recalcular_contadores();
+
+cambios_pendientes = 1; // Hay cambios pendientes para guardar
 
 printf("===Tarea agregada correctamente.\n");
 }
@@ -240,11 +245,14 @@ void cargar_tareas(const char *nombre_archivo)
 
 void mostrar_tarea(void){ // Muestra todas las tareas registradas en el sistema
     int i;
+    int opcion;
+    int indice;
 
     printf("\n===Lista de Tareas===\n");
 
     if (contador_tareas == 0){
         printf("No hay tareas agregadas.\n");
+
     }
 // Recorrer todas las tareas almacenadas
     for (i=0; i<contador_tareas; i++){ 
@@ -269,18 +277,57 @@ void mostrar_tarea(void){ // Muestra todas las tareas registradas en el sistema
 
         printf("Estado: ");
 
-        if (tareas[i].estado_tarea == 0)
+        if (tareas[i].estado_tarea == 1)
 
-            printf("Activa\n");
-        else
             printf("Completada\n");
+        else
+            printf("No Completada\n");
     }
 
-    printf("\n===================================\n");
+    // ---- Preguntar si desea marcar una tarea ----
+    printf("\n¿Desea marcar una tarea como completada?\n");
 
+    printf("1. Si\n");
 
+    printf("2. Volver\n");
 
+    printf("Seleccione una opcion: ");
 
+    scanf("%d", &opcion);
+
+    limpiarBufferEntrada();
+
+    if (opcion == 1)
+    {
+        printf("Ingrese el numero de la tarea: ");
+        scanf("%d", &indice);
+        limpiarBufferEntrada();
+
+        indice--; // Ajuste para arreglo (usuario ve desde 1)
+
+        if (indice < 0 || indice >= contador_tareas)
+        {
+            printf("* Numero de tarea invalido.\n");
+            return;
+        }
+
+        if (tareas[indice].estado_tarea == 1)
+        {
+            printf("* La tarea ya esta completada.\n");
+        }
+        else
+{
+     tareas[indice].estado_tarea = 1;
+    cambios_pendientes = 1;   // <-- CAMBIO IMPORTANTE
+    recalcular_contadores();
+    printf("* Tarea marcada como completada.\n");
+
+    // Mostrar nuevamente la lista actualizada
+    mostrar_tarea();
+}
     }
+}
+
+    
 
 

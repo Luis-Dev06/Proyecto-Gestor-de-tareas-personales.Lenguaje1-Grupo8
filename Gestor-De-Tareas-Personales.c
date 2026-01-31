@@ -31,6 +31,7 @@ int contador_tareas = 0;
 int contadoractivas = 0;
 int contadorcompletadas = 0;
 int cambios_pendientes = 0; // 0 = no hay cambios, 1 = hay cambios
+char archivo_cargado[100] = "";  // Variable para almacenar el nombre del archivo cargado
 
 void limpiarBufferEntrada(void);
 void recalcular_contadores(void);
@@ -42,80 +43,112 @@ void cargar_tareas(const char *nombre_archivo);
 void agregartarea();
 void mostrar_tarea(void);
 void mostrar_menu(void); 
-
-int main(){
-
-  char nombre_archivo[100];
-  char opcion_mostrar;// Opcion para decidir si se muestran las tareas1
-  int opcion = 0;
-
-    //Mostrar menu y permitir al usuario elegir o ingresar archivo
+void eliminar_tarea(void);  // Nueva función para eliminar tarea
+void mostrar_contadores(void); // Mostrar el contador de tareas
+void marcar_completada(void); // Función para marcar tarea como completada
+/* -------------------- Inicio/menu del programa -------------------- */
+int main() {
+    // Mostrar el menú inicial recursivamente
     mostrar_menu();
-    scanf("%d", &opcion);
-    limpiarBufferEntrada();
-    
-    printf("Ingrese el nombre del archivo (sin extension, ej. 'tareas1'): ");
-    fgets(nombre_archivo, sizeof(nombre_archivo), stdin);
-    nombre_archivo[strcspn(nombre_archivo, "\n")] = '\0'; //Limpiar salto de línea
-
-    //Intentar cargar las tareas del archivo especificado
-    if (opcion == 1)
-    {
-        cargar_tareas(nombre_archivo);
-    }
-    else if (opcion == 2)
-    {
-        // Nuevo archivo: arrancar vacío
-        contador_tareas = 0;
-        contadoractivas = 0;
-        contadorcompletadas = 0;
-        printf("* Archivo nuevo seleccionado: '%s.dat'\n", nombre_archivo);
-    }
-    else
-    {
-        printf("* Opcion invalida. Saliendo...\n");
-        return 0;
-    }
-
-printf("=====================================\n");
-    
-    printf("===Bienvenido al Gestor de Tareas Personales\n\n");
-    printf("===Tareas agregadas: %d\n", contador_tareas);
-    printf("===Tareas activas: %d\n", contadoractivas);
-    printf("===Tareas completadas: %d\n\n", contadorcompletadas);
-
-
-// ----- OPCION PARA MOSTRAR TAREAS DESPUES DE LA BIENVENIDA -----
-
-printf("Desea ver sus tareas actuales? (s/n): ");
-
-scanf(" %c", &opcion_mostrar);
-
-limpiarBufferEntrada();
-
-if (opcion_mostrar == 's' || opcion_mostrar == 'S')
-{
-    mostrar_tarea
-    ();
+    return 0;
 }
 
-agregartarea();
+void mostrar_menu() {
+    char nombre_archivo[100];
+    int opcion = 0;
 
-
-if (cambios_pendientes)
-{
-    guardar_tareas(nombre_archivo);
-}
-
-return 0;
-}
-
-void mostrar_menu()
-{
-    printf("=== Menu ===\n");
+    // Imprime el menú de opciones iniciales
+    printf("\nBienvenido a nuestro gestor de tareas personales, realizado por el grupo 8 de ING. En Sistemas.\n");
+    printf("=== Que accion desea realizar? ===\n");
     printf("\n1. Cargar tareas de un archivo\n");
     printf("2. Crear nuevo archivo de tareas\n");
-    printf("\nElija una opcion: ");
+
+    printf("\n*Seleccione una opcion: ");
+    scanf("%d", &opcion);
+    limpiarBufferEntrada();  // Limpiar el buffer de entrada
+
+    switch(opcion) {
+        case 1:
+            // Cargar tareas desde un archivo
+            printf("*Ingrese el nombre del archivo para cargar: ");
+            fgets(nombre_archivo, sizeof(nombre_archivo), stdin);
+            nombre_archivo[strcspn(nombre_archivo, "\n")] = '\0'; // Limpiar salto de línea
+            cargar_tareas(nombre_archivo);
+            break;
+        case 2:
+            // Crear un nuevo archivo
+            contador_tareas = 0;
+            contadoractivas = 0;
+            contadorcompletadas = 0;
+            printf("*Archivo nuevo creado.\n");
+            break;
+        default:
+            printf("*Opcion invalida. Volviendo a intentar...\n");
+            mostrar_menu();  // Si la opcion es incorrecta, volvemos al menú
+            return;
+    }
+
+    // Mostrar el menú secundario con las opciones de gestión de tareas
+    while (1) {
+        // Mostrar encabezado con nombre del archivo cargado y contadores
+        mostrar_contadores();
+
+        printf("\n=== Que desea hacer ahora? ===\n");
+        printf("1. Agregar una nueva tarea\n");
+        printf("2. Eliminar una tarea\n");
+        printf("3. Mostrar tareas\n");
+        printf("4. Guardar tareas\n");
+        printf("5. Marcar tarea como completada\n");
+        printf("6. Salir del programa\n");
+        printf("7. Regresar al menu principal\n");
+
+        printf("\n*Seleccione una opcion: ");
+        scanf("%d", &opcion);
+        limpiarBufferEntrada();  // Limpiar el buffer de entrada
+
+        switch(opcion) {
+            case 1:
+                agregartarea();  // Función para agregar tarea
+                break;
+            case 2:
+                eliminar_tarea(); // Función para eliminar tarea
+                break;
+            case 3:
+                mostrar_tarea(); // Mostrar todas las tareas
+                break;
+            case 4:
+                printf("*Ingrese el nombre del archivo para guardar: ");
+                fgets(nombre_archivo, sizeof(nombre_archivo), stdin);
+                nombre_archivo[strcspn(nombre_archivo, "\n")] = '\0'; // Limpiar salto de línea
+                guardar_tareas(nombre_archivo);  
+                break;
+            case 5:
+                marcar_completada();  // Función para marcar tarea como completada
+                break;
+            case 6:
+                if (cambios_pendientes) {
+                    printf("*Hay cambios pendientes. ¿Desea guardar antes de salir? (s/n): ");
+                    char guardar;
+                    scanf(" %c", &guardar);
+                    if (guardar == 's' || guardar == 'S') {
+                        printf("*Ingrese el nombre del archivo para guardar: ");
+                        fgets(nombre_archivo, sizeof(nombre_archivo), stdin);
+                        nombre_archivo[strcspn(nombre_archivo, "\n")] = '\0'; // Limpiar salto de línea
+                        guardar_tareas(nombre_archivo);
+                    }
+                }
+                printf("*Saliendo del programa...\n");
+                return;  // Termina la ejecución del programa
+            case 7:
+                printf("*Regresando al menu principal...\n");
+                mostrar_menu();  // Volver al menú principal
+                return;
+            default:
+                printf("*Opcion invalida. Intente nuevamente.\n");
+        }
+
+        // Mostrar el menú nuevamente si no se ha salido
+    }
 }
 
 void agregartarea(){
@@ -147,28 +180,52 @@ cambios_pendientes = 1; // Hay cambios pendientes para guardar
 printf("===Tarea agregada correctamente.\n");
 }
 
-/* -------------------- UTILIDADES -------------------- */
-
-void limpiarBufferEntrada(void)
-{
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) { }
-}
-
-void recalcular_contadores(void)
-{
-    int i;
-    contadoractivas = 0;
-    contadorcompletadas = 0;
-
-    for (i = 0; i < contador_tareas; i++)
-    {
-        if (tareas[i].estado_tarea == 1)
-            contadorcompletadas++;
-        else
-            contadoractivas++;
+void eliminar_tarea() {
+    if (contador_tareas == 0) {
+        printf("*No hay tareas para eliminar.\n");
+        return;
     }
+
+    int indice;
+    printf("*Ingrese el numero de la tarea que desea eliminar: ");
+    scanf("%d", &indice);
+
+    if (indice < 1 || indice > contador_tareas) {
+        printf("*Numero de tarea invalido.\n");
+        return;
+    }
+
+    // Eliminar la tarea
+    for (int i = indice - 1; i < contador_tareas - 1; i++) {
+        tareas[i] = tareas[i + 1]; // Desplazar tareas hacia arriba
+    }
+
+    contador_tareas--; // Reducir el contador de tareas
+
+    recalcular_contadores();
+    cambios_pendientes = 1; // Hay cambios pendientes para guardar
+
+    printf("*Tarea eliminada correctamente.\n");
+
+    // Después de eliminar tarea, volvemos al menú principal recursivamente
 }
+
+void mostrar_tarea(void) {
+    if (contador_tareas == 0) {
+        printf("*No hay tareas agregadas.\n");
+        return;
+    }
+
+    printf("\n=== Lista de Tareas ===\n");
+    for (int i = 0; i < contador_tareas; i++) {
+        printf("*Tarea #%d: %s\n", i + 1, tareas[i].titulo_tarea);
+        printf("*Prioridad: %d\n", tareas[i].prioridad);
+        printf("*Estado: %s\n", tareas[i].estado_tarea ? "Completada" : "No completada");
+    }
+
+    // Después de mostrar las tareas, volvemos al menú principal recursivamente
+}
+
 
 /* -------------------- ARCHIVOS -------------------- */
 
@@ -190,7 +247,7 @@ void guardar_tareas(const char *nombre_archivo)
     FILE *f = fopen(archivo_final, "wb");
     if (f == NULL)
     {
-        printf("* Error: No se pudo abrir el archivo para guardar.\n");
+        printf("*Error: No se pudo abrir el archivo para guardar.\n");
         return;
     }
 
@@ -202,7 +259,7 @@ void guardar_tareas(const char *nombre_archivo)
     fwrite(tareas, sizeof(Tareas), contador_tareas, f);
 
     fclose(f);
-    printf("* Tareas guardadas en '%s'.\n", archivo_final);
+    printf("*Tareas guardadas en '%s'.\n", archivo_final);
 }
 
 void cargar_tareas(const char *nombre_archivo)
@@ -213,7 +270,7 @@ void cargar_tareas(const char *nombre_archivo)
     FILE *f = fopen(archivo_final, "rb");
     if (f == NULL)
     {
-        printf("* No existe '%s'. Se iniciara sin tareas.\n", archivo_final);
+        printf("*No existe '%s'. Se iniciara sin tareas.\n", archivo_final);
         contador_tareas = 0;
         contadoractivas = 0;
         contadorcompletadas = 0;
@@ -222,7 +279,7 @@ void cargar_tareas(const char *nombre_archivo)
 
     if (fread(&contador_tareas, sizeof(int), 1, f) != 1)
     {
-        printf("* Archivo corrupto o vacio. Se iniciara sin tareas.\n");
+        printf("*Archivo corrupto o vacio. Se iniciara sin tareas.\n");
         contador_tareas = 0;
         fclose(f);
         return;
@@ -230,7 +287,7 @@ void cargar_tareas(const char *nombre_archivo)
 
     if (contador_tareas < 0 || contador_tareas > MAXIMO_TAREAS)
     {
-        printf("* Archivo invalido. Se iniciara sin tareas.\n");
+        printf("*Archivo invalido. Se iniciara sin tareas.\n");
         contador_tareas = 0;
         fclose(f);
         return;
@@ -240,94 +297,58 @@ void cargar_tareas(const char *nombre_archivo)
     fclose(f);
 
     recalcular_contadores();
-    printf("* Tareas cargadas desde '%s'.\n", archivo_final);
+    printf("*Tareas cargadas desde '%s'.\n", archivo_final);
+}
+/* -------------------- Utilidades -------------------- */
+void limpiarBufferEntrada(void) {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
 }
 
-void mostrar_tarea(void){ // Muestra todas las tareas registradas en el sistema
-    int i;
-    int opcion;
-    int indice;
+void recalcular_contadores(void) {
+    contadoractivas = 0;
+    contadorcompletadas = 0;
 
-    printf("\n===Lista de Tareas===\n");
-
-    if (contador_tareas == 0){
-        printf("No hay tareas agregadas.\n");
-
-    }
-// Recorrer todas las tareas almacenadas
-    for (i=0; i<contador_tareas; i++){ 
-
-        printf("\nTarea #%d\n", i + 1);
-
-        printf("Titulo: %s\n", tareas[i].titulo_tarea);
-
-
-        printf("Prioridad: ");
-
-        if (tareas[i].prioridad == 1)
-
-            printf("Alta\n");
-
-        else if (tareas[i].prioridad == 2)
-
-            printf("Media\n");
-
-        else if (tareas[i].prioridad == 3)
-            printf("Baja\n");
-
-        printf("Estado: ");
-
+    for (int i = 0; i < contador_tareas; i++) {
         if (tareas[i].estado_tarea == 1)
-
-            printf("Completada\n");
+            contadorcompletadas++;
         else
-            printf("No Completada\n");
+            contadoractivas++;
+    }
+}
+
+void mostrar_contadores(void) {
+    printf("\n=== Archivo \"%s\" cargado ===\n", archivo_cargado);
+    printf("*Tareas agregadas: %d\n", contador_tareas);
+    printf("*Tareas activas: %d\n", contadoractivas);
+    printf("*Tareas completadas: %d\n", contadorcompletadas);
+}
+
+void marcar_completada(void) {
+    int indice;
+    if (contador_tareas == 0) {
+        printf("*No hay tareas para marcar como completadas.\n");
+        return;
     }
 
-    // ---- Preguntar si desea marcar una tarea ----
-    printf("\n¿Desea marcar una tarea como completada?\n");
+    printf("*Ingrese el numero de la tarea que desea marcar como completada: ");
+    scanf("%d", &indice);
 
-    printf("1. Si\n");
+    if (indice < 1 || indice > contador_tareas) {
+        printf("*Numero de tarea invalido.\n");
+        return;
+    }
 
-    printf("2. Volver\n");
+    if (tareas[indice - 1].estado_tarea == 1) {
+        printf("*La tarea ya esta completada.\n");
+        return;
+    }
 
-    printf("Seleccione una opcion: ");
-
-    scanf("%d", &opcion);
-
-    limpiarBufferEntrada();
-
-    if (opcion == 1)
-    {
-        printf("Ingrese el numero de la tarea: ");
-        scanf("%d", &indice);
-        limpiarBufferEntrada();
-
-        indice--; // Ajuste para arreglo (usuario ve desde 1)
-
-        if (indice < 0 || indice >= contador_tareas)
-        {
-            printf("* Numero de tarea invalido.\n");
-            return;
-        }
-
-        if (tareas[indice].estado_tarea == 1)
-        {
-            printf("* La tarea ya esta completada.\n");
-        }
-        else
-{
-     tareas[indice].estado_tarea = 1;
-    cambios_pendientes = 1;   // <-- CAMBIO IMPORTANTE
+    tareas[indice - 1].estado_tarea = 1;
     recalcular_contadores();
-    printf("* Tarea marcada como completada.\n");
+    cambios_pendientes = 1; // Hay cambios pendientes para guardar
 
-    // Mostrar nuevamente la lista actualizada
-    mostrar_tarea();
+    printf("*Tarea marcada como completada.\n");
+
+    // Después de marcar la tarea como completada, volvemos al menú principal
 }
-    }
-}
-
-    
-
-

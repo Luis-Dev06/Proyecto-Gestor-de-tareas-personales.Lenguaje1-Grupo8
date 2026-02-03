@@ -16,11 +16,14 @@ Integrantes:
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #define MAXIMO_TAREAS 100
 
 typedef struct 
 {
     char titulo_tarea[100];
+    char descripcion[300];   // nota de la tarea
+    char fecha[15]; 
     int prioridad; // 1-prioridad alta, 2-prioridad media, 3 prioridad baja
     int estado_tarea; // 0-incompleta, 1-competa 
 }Tareas;
@@ -43,6 +46,7 @@ void cargar_tareas(const char *nombre_archivo);
 void agregartarea();
 void mostrar_tarea(void);
 void mostrar_menu(void); 
+void editar_tarea(void);
 void eliminar_tarea(void);  // Nueva función para eliminar tarea
 void mostrar_contadores(void); // Mostrar el contador de tareas
 void marcar_completada(void); // Función para marcar tarea como completada
@@ -176,6 +180,16 @@ fgets(tareas[contador_tareas].titulo_tarea, 100, stdin);
  // Quitar salto de línea que deja fgets
     tareas[contador_tareas].titulo_tarea[strcspn(tareas[contador_tareas].titulo_tarea, "\n")] = '\0';
 
+    printf("*Ingrese una descripcion o nota: ");
+fgets(tareas[contador_tareas].descripcion, 300, stdin);
+
+tareas[contador_tareas].descripcion[strcspn(
+    tareas[contador_tareas].descripcion, "\n")] = '\0';
+
+    time_t t = time(NULL);
+struct tm *tm_info = localtime(&t);
+strftime(tareas[contador_tareas].fecha, 15, "%d/%m/%Y", tm_info);
+
 printf("*Ingrese la prioridad de la tarea (1-Alta, 2-Media, 3-Baja): ");
 scanf("%d", &tareas[contador_tareas].prioridad);
 limpiarBufferEntrada(); // importante para que el próximo fgets no se salte
@@ -221,49 +235,70 @@ void eliminar_tarea() {
     // Después de eliminar tarea, volvemos al menú principal recursivamente
 }
 
-void mostrar_tarea(void) {
+void mostrar_tarea(void){
 
     int opcion;
 
-    if (contador_tareas == 0) {
-        printf("*No hay tareas agregadas.\n");
+    if (contador_tareas == 0){
+        printf("*No hay tareas.\n");
         return;
     }
 
-    while (1) {
+    while(1)   // ← CLAVE PARA NO SALIR AL MENU PRINCIPAL
+    {
+        int filtro = 0;
+
+        printf("\n=== FILTRO ===\n");
+        printf("1. Todas\n");
+        printf("2. Solo activas\n");
+        printf("3. Solo completadas\n");
+        printf("Seleccione: ");
+        scanf("%d",&filtro);
+        limpiarBufferEntrada();
+
         printf("\n=== Lista de Tareas ===\n");
 
+        int encontradas = 0;
+
         for (int i = 0; i < contador_tareas; i++) {
+
+            if (filtro == 2 && tareas[i].estado_tarea == 1)
+                continue;
+
+            if (filtro == 3 && tareas[i].estado_tarea == 0)
+                continue;
+
             printf("\nTarea #%d\n", i + 1);
             printf("Titulo: %s\n", tareas[i].titulo_tarea);
+            printf("Descripcion: %s\n", tareas[i].descripcion);
+            printf("Fecha: %s\n", tareas[i].fecha);
             printf("Prioridad: %d\n", tareas[i].prioridad);
             printf("Estado: %s\n",
                    tareas[i].estado_tarea ? "Completada" : "No completada");
+
+            encontradas++;
+        }
+
+        if (encontradas == 0) {
+            printf("*No hay tareas que coincidan con el filtro.\n");
         }
 
         printf("\n--- Opciones ---\n");
-        printf("1. Marcar como completada\n");
-        printf("2. Eliminar tarea\n");
-        printf("3. Volver\n");
-
+        printf("1. Marcar completada\n");
+        printf("2. Eliminar\n");
+        printf("3. Editar\n");
+        printf("4. Volver\n");
         printf("Seleccione una opcion: ");
-        scanf("%d", &opcion);
+
+        scanf("%d",&opcion);
         limpiarBufferEntrada();
 
         switch(opcion) {
-            case 1:
-                marcar_completada();
-                break;
-
-            case 2:
-                eliminar_tarea();
-                break;
-
-            case 3:
-                return; // volver al menú principal
-
-            default:
-                printf("*Opcion invalida.\n");
+            case 1: marcar_completada(); break;
+            case 2: eliminar_tarea(); break;
+            case 3: editar_tarea(); break;
+            case 4: return;   // ← SOLO vuelve al menú secundario
+            default: printf("*Opcion invalida.\n");
         }
     }
 }
@@ -398,4 +433,57 @@ void marcar_completada(void) {
     printf("*Tarea marcada como completada.\n");
 
     // Después de marcar la tarea como completada, volvemos al menú principal
+}
+
+void editar_tarea(){
+
+    int indice, opcion;
+
+    if (contador_tareas == 0){
+        printf("*No hay tareas para editar.\n");
+        return; // vuelve al submenu automaticamente
+    }
+
+    printf("*Numero de tarea a editar: ");
+    scanf("%d",&indice);
+    limpiarBufferEntrada();
+
+    if(indice < 1 || indice > contador_tareas){
+        printf("*Numero invalido.\n");
+        return;
+    }
+
+    indice--;
+
+    printf("\n1. Cambiar titulo\n");
+    printf("2. Cambiar descripcion\n");
+    printf("3. Cambiar prioridad\n");
+    printf("Seleccione: ");
+    scanf("%d",&opcion);
+    limpiarBufferEntrada();
+
+    switch(opcion){
+
+        case 1:
+            printf("Nuevo titulo: ");
+            fgets(tareas[indice].titulo_tarea,100,stdin);
+            tareas[indice].titulo_tarea[strcspn(tareas[indice].titulo_tarea,"\n")] = 0;
+            break;
+
+        case 2:
+            printf("Nueva descripcion: ");
+            fgets(tareas[indice].descripcion,200,stdin);
+            tareas[indice].descripcion[strcspn(tareas[indice].descripcion,"\n")] = 0;
+            break;
+
+        case 3:
+            printf("Nueva prioridad: ");
+            scanf("%d",&tareas[indice].prioridad);
+            limpiarBufferEntrada();
+            break;
+    }
+
+    cambios_pendientes = 1;
+
+    printf("*Tarea editada correctamente.\n");
 }

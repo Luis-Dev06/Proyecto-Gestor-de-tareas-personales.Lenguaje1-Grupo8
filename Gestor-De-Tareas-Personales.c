@@ -17,6 +17,7 @@ Integrantes:
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 #define MAXIMO_TAREAS 100
 
 typedef struct 
@@ -37,6 +38,62 @@ int cambios_pendientes = 0; // 0 = no hay cambios, 1 = hay cambios
 char archivo_cargado[100] = "";  // Variable para almacenar el nombre del archivo cargado
 
 void limpiarBufferEntrada(void);
+
+/* ======== LECTURA SEGURA ======== */
+
+int leerEnteroSeguro(const char *mensaje, int min, int max)
+{
+    char buffer[100];
+    char *fin;
+    long numero;
+
+    while (1)
+    {
+        printf("%s", mensaje);
+
+        if (!fgets(buffer, sizeof(buffer), stdin))
+            continue;
+
+        numero = strtol(buffer, &fin, 10); 
+
+        if (fin == buffer || (*fin != '\n' && *fin != '\0'))
+        {
+            printf("*Error: solo numeros validos.\n");
+            continue;
+        }
+
+        if (numero < min || numero > max)
+        {
+            printf("*Error: rango permitido (%d - %d).\n", min, max);
+            continue;
+        }
+
+        return (int)numero;
+    }
+}
+
+void leerTextoSeguro(const char *mensaje, char *destino, int tam)
+{
+    while (1)
+    {
+        printf("%s", mensaje);
+
+        if (!fgets(destino, tam, stdin))
+            continue;
+
+        destino[strcspn(destino, "\n")] = 0;
+
+        if (strlen(destino) == 0)
+        {
+            printf("*Error: no puede estar vacio.\n");
+            continue;
+        }
+
+        return;
+    }
+}
+
+
 void recalcular_contadores(void);
 
 
@@ -67,9 +124,7 @@ void mostrar_menu() {
     printf("\n1. Cargar tareas de un archivo\n");
     printf("2. Crear nuevo archivo de tareas\n");
 
-    printf("\n*Seleccione una opcion: ");
-    scanf("%d", &opcion);
-    limpiarBufferEntrada();  // Limpiar el buffer de entrada
+    opcion = leerEnteroSeguro("\n*Seleccione una opcion: ", 1, 2);
 
     switch(opcion) {
         case 1:
@@ -122,9 +177,7 @@ printf("*Archivo nuevo creado: '%s.dat'\n", archivo_cargado);
         printf("4. Salir del programa\n");
         printf("5. Regresar al menu principal\n");
 
-        printf("\n*Seleccione una opcion: ");
-        scanf("%d", &opcion);
-        limpiarBufferEntrada();  // Limpiar el buffer de entrada
+       opcion = leerEnteroSeguro("\n*Seleccione una opcion: ", 1, 5);
 
         switch(opcion) {
             case 1:
@@ -174,25 +227,18 @@ if (contador_tareas >= MAXIMO_TAREAS)
 }
 
 printf("===Agregar una tarea===\n");
-printf("*Ingrese el titulo de la tarea: ");
-fgets(tareas[contador_tareas].titulo_tarea, 100, stdin); 
+leerTextoSeguro("*Ingrese el titulo de la tarea: ",
+                tareas[contador_tareas].titulo_tarea, 100);
 
- // Quitar salto de línea que deja fgets
-    tareas[contador_tareas].titulo_tarea[strcspn(tareas[contador_tareas].titulo_tarea, "\n")] = '\0';
-
-    printf("*Ingrese una descripcion o nota: ");
-fgets(tareas[contador_tareas].descripcion, 300, stdin);
-
-tareas[contador_tareas].descripcion[strcspn(
-    tareas[contador_tareas].descripcion, "\n")] = '\0';
+    leerTextoSeguro("*Ingrese una descripcion o nota: ",
+                tareas[contador_tareas].descripcion, 300);
 
     time_t t = time(NULL);
 struct tm *tm_info = localtime(&t);
 strftime(tareas[contador_tareas].fecha, 15, "%d/%m/%Y", tm_info);
 
-printf("*Ingrese la prioridad de la tarea (1-Alta, 2-Media, 3-Baja): ");
-scanf("%d", &tareas[contador_tareas].prioridad);
-limpiarBufferEntrada(); // importante para que el próximo fgets no se salte
+tareas[contador_tareas].prioridad =
+    leerEnteroSeguro("*Ingrese la prioridad (1-Alta, 2-Media, 3-Baja): ", 1, 3);
 
 tareas[contador_tareas].estado_tarea = 0; // por defecto incompleta
 
@@ -212,8 +258,7 @@ void eliminar_tarea() {
     }
 
     int indice;
-    printf("*Ingrese el numero de la tarea que desea eliminar: ");
-    scanf("%d", &indice);
+   indice = leerEnteroSeguro("*Ingrese el numero de la tarea que desea eliminar: ", 1, contador_tareas);
 
     if (indice < 1 || indice > contador_tareas) {
         printf("*Numero de tarea invalido.\n");
@@ -252,9 +297,7 @@ void mostrar_tarea(void){
         printf("1. Todas\n");
         printf("2. Solo activas\n");
         printf("3. Solo completadas\n");
-        printf("Seleccione: ");
-        scanf("%d",&filtro);
-        limpiarBufferEntrada();
+       filtro = leerEnteroSeguro("Seleccione: ", 1, 3);
 
         printf("\n=== Lista de Tareas ===\n");
 
@@ -288,10 +331,7 @@ void mostrar_tarea(void){
         printf("2. Eliminar\n");
         printf("3. Editar\n");
         printf("4. Volver\n");
-        printf("Seleccione una opcion: ");
-
-        scanf("%d",&opcion);
-        limpiarBufferEntrada();
+        opcion = leerEnteroSeguro("Seleccione una opcion: ", 1, 4);
 
         switch(opcion) {
             case 1: marcar_completada(); break;
@@ -413,8 +453,7 @@ void marcar_completada(void) {
         return;
     }
 
-    printf("*Ingrese el numero de la tarea que desea marcar como completada: ");
-    scanf("%d", &indice);
+    indice = leerEnteroSeguro("*Ingrese el numero de la tarea que desea marcar como completada: ", 1, contador_tareas);
 
     if (indice < 1 || indice > contador_tareas) {
         printf("*Numero de tarea invalido.\n");
@@ -444,9 +483,7 @@ void editar_tarea(){
         return; // vuelve al submenu automaticamente
     }
 
-    printf("*Numero de tarea a editar: ");
-    scanf("%d",&indice);
-    limpiarBufferEntrada();
+   indice = leerEnteroSeguro("*Numero de tarea a editar: ", 1, contador_tareas);
 
     if(indice < 1 || indice > contador_tareas){
         printf("*Numero invalido.\n");
@@ -458,28 +495,21 @@ void editar_tarea(){
     printf("\n1. Cambiar titulo\n");
     printf("2. Cambiar descripcion\n");
     printf("3. Cambiar prioridad\n");
-    printf("Seleccione: ");
-    scanf("%d",&opcion);
-    limpiarBufferEntrada();
-
+    opcion = leerEnteroSeguro("Seleccione: ", 1, 3);
     switch(opcion){
 
         case 1:
-            printf("Nuevo titulo: ");
-            fgets(tareas[indice].titulo_tarea,100,stdin);
-            tareas[indice].titulo_tarea[strcspn(tareas[indice].titulo_tarea,"\n")] = 0;
+            leerTextoSeguro("Nuevo titulo: ", tareas[indice].titulo_tarea, 100);
             break;
 
         case 2:
-            printf("Nueva descripcion: ");
-            fgets(tareas[indice].descripcion,200,stdin);
-            tareas[indice].descripcion[strcspn(tareas[indice].descripcion,"\n")] = 0;
+           leerTextoSeguro("Nueva descripcion: ", tareas[indice].descripcion, 300);
             break;
 
         case 3:
             printf("Nueva prioridad: ");
-            scanf("%d",&tareas[indice].prioridad);
-            limpiarBufferEntrada();
+           tareas[indice].prioridad =
+    leerEnteroSeguro("Nueva prioridad (1-3): ", 1, 3);
             break;
     }
 

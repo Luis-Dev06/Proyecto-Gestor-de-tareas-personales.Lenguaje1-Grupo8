@@ -120,10 +120,11 @@ void mostrar_menu() {
 
     // Imprime el menú de opciones iniciales
     printf("\nBienvenido a nuestro gestor de tareas personales, realizado por el grupo 8 de ING. En Sistemas.\n");
+    printf("\n*Nota: solo se cargan archivos .dat creados por este programa.\n");
     printf("=== Que accion desea realizar? ===\n");
     printf("\n1. Cargar tareas de un archivo\n");
     printf("2. Crear nuevo archivo de tareas\n");
-
+    
     opcion = leerEnteroSeguro("\n*Seleccione una opcion: ", 1, 2);
 
     switch(opcion) {
@@ -141,7 +142,8 @@ void mostrar_menu() {
     contadoractivas = 0;
     contadorcompletadas = 0;
 
-    printf("*Ingrese nombre del nuevo archivo: ");
+    printf("*Ingrese nombre del nuevo archivo(Maximo 99 caracteres. Use solo letras y numeros para el nombre del archivo): ");
+    
     fgets(nombre_archivo, sizeof(nombre_archivo), stdin);
 nombre_archivo[strcspn(nombre_archivo, "\n")] = '\0';
 
@@ -177,7 +179,7 @@ printf("*Archivo nuevo creado: '%s.dat'\n", archivo_cargado);
         printf("4. Salir del programa\n");
         printf("5. Regresar al menu principal\n");
 
-       opcion = leerEnteroSeguro("\n*Seleccione una opcion: ", 1, 5);
+       opcion = leerEnteroSeguro("\n*Seleccione una opcion numerica (1-5): ", 1, 5);
 
         switch(opcion) {
             case 1:
@@ -196,7 +198,7 @@ printf("*Archivo nuevo creado: '%s.dat'\n", archivo_cargado);
 {
     char respuesta[10];
 
-    printf("*¿Desea guardar antes de salir? (s/n): ");
+    printf("*Desea guardar antes de salir? (s/n): ");
     fgets(respuesta, sizeof(respuesta), stdin);
 
     if (respuesta[0] == 's' || respuesta[0] == 'S') {
@@ -227,10 +229,11 @@ if (contador_tareas >= MAXIMO_TAREAS)
 }
 
 printf("===Agregar una tarea===\n");
-leerTextoSeguro("*Ingrese el titulo de la tarea: ",
+printf("\n*Recuerde que el programa no es capaz de almacenar mas de 100 archivos de tareas\npor lo tanto, si cuenta con un numero de tareas superior a 99 se recomienda hacer una limpieza de las mismas para poder seguir agregando mas sin problemas.\n\n");
+leerTextoSeguro("*Ingrese el titulo de la tarea(maximo 99 caracteres): ",
                 tareas[contador_tareas].titulo_tarea, 100);
 
-    leerTextoSeguro("*Ingrese una descripcion o nota: ",
+    leerTextoSeguro("*Ingrese una descripcion o nota(maximo 299 caracteres): ",
                 tareas[contador_tareas].descripcion, 300);
 
     time_t t = time(NULL);
@@ -238,7 +241,7 @@ struct tm *tm_info = localtime(&t);
 strftime(tareas[contador_tareas].fecha, 15, "%d/%m/%Y", tm_info);
 
 tareas[contador_tareas].prioridad =
-    leerEnteroSeguro("*Ingrese la prioridad (1-Alta, 2-Media, 3-Baja): ", 1, 3);
+    leerEnteroSeguro("*Ingrese la prioridad (SOLO NUMEROS: 1-Alta, 2-Media, 3-Baja): ", 1, 3);
 
 tareas[contador_tareas].estado_tarea = 0; // por defecto incompleta
 
@@ -293,11 +296,11 @@ void mostrar_tarea(void){
     {
         int filtro = 0;
 
-        printf("\n=== FILTRO ===\n");
+        printf("\n=== Filtro ===\n");
         printf("1. Todas\n");
         printf("2. Solo activas\n");
         printf("3. Solo completadas\n");
-       filtro = leerEnteroSeguro("Seleccione: ", 1, 3);
+       filtro = leerEnteroSeguro("Seleccione una opcion numerica (1-3): ", 1, 3);
 
         printf("\n=== Lista de Tareas ===\n");
 
@@ -326,12 +329,12 @@ void mostrar_tarea(void){
             printf("*No hay tareas que coincidan con el filtro.\n");
         }
 
-        printf("\n--- Opciones ---\n");
+        printf("\n=== Opciones ===\n");
         printf("1. Marcar completada\n");
         printf("2. Eliminar\n");
         printf("3. Editar\n");
         printf("4. Volver\n");
-        opcion = leerEnteroSeguro("Seleccione una opcion: ", 1, 4);
+        opcion = leerEnteroSeguro("Seleccione una opcion numerica (1-4): ", 1, 4);
 
         switch(opcion) {
             case 1: marcar_completada(); break;
